@@ -46,7 +46,25 @@ def getRange():
     for system in ranges.keys():
         print "System %s has min value %s (%s) and max value %s (%s)" % (system, str(ranges[system]['min']), ranges[system]['minlexelt'], str(ranges[system]['max']), ranges[system]['maxlexelt'])
 
+def get_absolute_min_max():
+    min = 999
+    max = 0
+    for system in ranges.keys():
+        curr_min = ranges[system]['min']
+        curr_max = ranges[system]['max']
+        if curr_min < min:
+            min = curr_min
+        if curr_max > max:
+            max = curr_max
+
+    return (min, max)
+
 def divideIntoSetsIndividual():
+    min, max = get_absolute_min_max()
+    DELTA_SOLVED = (max - min) * 2 / 3
+    DELTA_HARD = (max - min) * 1 / 3
+    DELTA_TIED = (max - min) / 5
+    
     sets = open('setsIndividual.txt', 'w')
     for system in data.keys():
         sets.write('---\n' + system + ': \n---\n')
@@ -73,6 +91,10 @@ def divideIntoSetsIndividual():
     sets.close()
     
 def divideIntoSetsPairs():
+    min, max = get_absolute_min_max()
+    DELTA_SOLVED = (max - min) * 2 / 3
+    DELTA_HARD = (max - min) * 1 / 3
+    DELTA_TIED = (max - min) / 5
     setsP = open('setsPairs.txt', 'w')
     erledigt = defaultdict(dict)
 
@@ -140,6 +162,10 @@ def divideIntoSetsPairs():
 
 def generatePlots():
     erledigt = defaultdict(dict)
+    min, max = get_absolute_min_max()
+    DELTA_SOLVED = (max - min) * 2 / 3
+    DELTA_HARD = (max - min) * 1 / 3
+    DELTA_TIED = (max - min) / 5
 
     for system1 in data.keys():
         for system2 in data.keys():
@@ -152,13 +178,15 @@ def generatePlots():
                 erledigt[system2][system1] = 1
                 sys1Scores = []
                 sys2Scores = []
+                sys1Labels = []
+                sys2Labels = []
                 for s in data[system1].keys():
                     sys1Scores.append(data[system1][s]) # The value
-                    # sys1Scores.append(s) # The lemmas
+                    sys1Labels.append(s) # The lemmas
 
                 for s in data[system2].keys():
                     sys2Scores.append(data[system2][s]) # The value
-                    # sys2Scores.append(s) # The lemmas
+                    sys2Labels.append(s) # The lemmas
 
                 # Check: # of items = 101
                 # print(len(sys1Scores))
@@ -166,6 +194,13 @@ def generatePlots():
 
                 # 'o' for points, default = line
                 P.plot(sys1Scores, sys2Scores, 'ro')
+
+                for i in xrange(len(sys1Labels)):
+                    point_label = sys1Labels[i]
+                    point_x = sys1Scores[i]
+                    point_y = sys2Scores[i]
+                    P.annotate(point_label, xy = (point_x, point_y), xytext = (-10, 10), textcoords = 'offset points', ha = 'right', va = 'bottom', bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5), arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
                 P.xlabel(system1)
                 P.ylabel(system2)
                 P.title('Disruptive Set Plot')
@@ -177,8 +212,8 @@ def generatePlots():
 
                 xs1 = [0, DELTA_HARD, DELTA_HARD]
                 ys1 = [DELTA_HARD, DELTA_HARD, 0]
-                xs2 = [DELTA_SOLVED, DELTA_SOLVED, 10]
-                ys2 = [10, DELTA_SOLVED, DELTA_SOLVED]
+                xs2 = [DELTA_SOLVED, DELTA_SOLVED, max]
+                ys2 = [max, DELTA_SOLVED, DELTA_SOLVED]
                 xs3 = [DELTA_HARD - DELTA_TIED/2, DELTA_SOLVED]
                 ys3 = [DELTA_HARD, DELTA_SOLVED + DELTA_TIED/2]
                 xs4 = [DELTA_SOLVED + DELTA_TIED/2, DELTA_HARD]
@@ -200,9 +235,9 @@ def generatePlots():
 # Constants and globals
 # Experimental values
 # CHANGE THESE to suit your needs
-DELTA_SOLVED = 6
-DELTA_HARD = 3
-DELTA_TIED = 2
+# DELTA_SOLVED = 6
+# DELTA_HARD = 3
+# DELTA_TIED = 2
 
 data = defaultdict(dict)
 ranges = defaultdict(dict)
